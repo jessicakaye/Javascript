@@ -1,12 +1,38 @@
+
 function copyTableToDoc() {
-  // Prompt the user to enter the Google Doc ID
-  var docId = Browser.inputBox('Enter the Google Doc ID (e.g. everything after the /d/ in a URL such as https://docs.google.com/document/d/abc)');
-  
+
+var ui = SpreadsheetApp.getUi();
+
+// Prompt for the Doc ID
+var docPrompt = ui.prompt(
+  'Enter the Google Doc ID',
+  'Paste everything after /d/ from the Doc URL',
+  ui.ButtonSet.OK_CANCEL
+);
+
+if (docPrompt.getSelectedButton() !== ui.Button.OK) {
+  ui.alert('Operation cancelled.');
+  return;
+}
+var docId = docPrompt.getResponseText();
+
+// Prompt for the sheet name
+var sheetPrompt = ui.prompt(
+  'Enter the tab (sheet) name',
+  'Enter the name of the sheet you want to pull data from (e.g. "04/11/25")',
+  ui.ButtonSet.OK_CANCEL
+);
+
+if (sheetPrompt.getSelectedButton() !== ui.Button.OK) {
+  ui.alert('Operation cancelled.');
+  return;
+}
+var sheetName = sheetPrompt.getResponseText();
+
   // Get the header prefix from the specified cell
   var headerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Parameters");
   var headerPrefix = headerSheet.getRange("B10").getValue();
-  const ui = SpreadsheetApp.getUi();
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("All Data");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     // Open the existing Google Doc
   try {
     var doc = DocumentApp.openById(docId);
@@ -16,31 +42,27 @@ function copyTableToDoc() {
   }
   var body = doc.getBody();
   // Show a confirmation dialog 
-  /var response = ui.alert('Confirm current quarter', 'The current quarter is: ' + headerPrefix + '. Do you want to proceed?', ui.ButtonSet.OK_CANCEL);
+  // var response = ui.alert('Confirm current quarter', 'The current quarter is: ' + headerPrefix + '. Do you want to proceed?', ui.ButtonSet.OK_CANCEL);
   
-  // Process the user's response
-  if (response == ui.Button.CANCEL) {
-    ui.alert('Operation cancelled.');
-    return;
-  }
+  // // Process the user's response
+  // if (response == ui.Button.CANCEL) {
+  //   ui.alert('Operation cancelled.');
+  //   return;
+  // }
 
 
   // Define the ranges and their headers
   var rangesAndHeaders = [
-    { range: "A8:C12", header: "Hours by Content Type" }//,
-    //enter more ranges here
-
+    { range: "A1:B4", header: "Active Sub HH Share By Platform" } //,
+    //add more ranges here
   ];
 
 // Track where tables are inserted
   const tableStartIndexes = [];
 
   body.appendParagraph(headerPrefix + " | Overall P+ Information")
-    .setBold(true).setForegroundColor("#0000FF").setUnderline(true);
+    .setBold(true).setItalic(false).setForegroundColor("#0000FF").setUnderline(true);
   body.appendParagraph("");
-
-  for (let i = 0; i < rangesAndHeaders.length; i++) {
-    const rangeInfo = rangesAndHeaders[i];
 
     if (rangeInfo.header === "Active Sub HHs by Genre") {
       body.appendParagraph(""); body.appendParagraph(""); body.appendParagraph("");
@@ -62,7 +84,6 @@ function copyTableToDoc() {
     // Header above the table
     body.appendParagraph(headerPrefix + " | " + rangeInfo.header)
       .setBold(true).setForegroundColor("#000000").setUnderline(false);
-    body.appendParagraph("");
 
 
     // Capture the table start index before appending
@@ -97,6 +118,7 @@ function copyTableToDoc() {
   body.appendParagraph(""); body.appendParagraph(""); body.appendParagraph("");
   body.appendParagraph(headerPrefix + " | Title-Level Information")
     .setBold(true).setForegroundColor("#0000FF").setUnderline(true);
+  body.appendParagraph("");
 
   doc.saveAndClose(); // Ensure body updates are saved so Docs API sees them
 
